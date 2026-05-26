@@ -193,8 +193,8 @@ else:
             st.button("🔁 もう一度聞く", key="replay_init")
         
         character_placeholder.image(media_talking, width='stretch')
-        # 🌟 音声が途切れないように待機時間を少し延長（0.18 -> 0.22 -> 0.14）
-        time.sleep(len(opening_msg) * 0.18 * time_multiplier) 
+        # 🌟 音声が途切れないように待機時間を少し延長（0.18 -> 0.19）
+        time.sleep(len(opening_msg) * 0.19 * time_multiplier) 
         character_placeholder.image(img_closed, width='stretch')
 
     else:
@@ -209,7 +209,7 @@ else:
             voice_player_placeholder.audio(st.session_state.latest_audio, format="audio/mp3", autoplay=True)
             character_placeholder.image(media_talking, width='stretch')
             last_text = st.session_state.messages[-1]["content"]
-            time.sleep(len(last_text) * 0.18 * time_multiplier)
+            time.sleep(len(last_text) * 0.19 * time_multiplier)
             character_placeholder.image(img_closed, width='stretch')
             st.rerun() # アニメーション終了後に状態をきれいにリセット
         elif st.session_state.latest_audio:
@@ -305,8 +305,8 @@ else:
                         
                         st.markdown(reply_text)
                         
-                        # 🌟 音声が途切れないように待機時間を少し延長（0.18 -> 0.22 -> 0.14）
-                        estimated_time = len(reply_text) * 0.18 * t_mult
+                        # 🌟 音声が途切れないように待機時間を少し延長（0.18 -> 0.19）
+                        estimated_time = len(reply_text) * 0.19 * t_mult
                         
                         character_placeholder.image(media_talking, width='stretch')
                         time.sleep(estimated_time)

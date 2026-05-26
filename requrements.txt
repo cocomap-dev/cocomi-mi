@@ -1,4 +1,0 @@
-streamlit
-google-genai
-edge-tts
-streamlit-mic-recorder

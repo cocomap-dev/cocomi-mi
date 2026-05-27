@@ -16,22 +16,35 @@ st.set_page_config(layout="centered", page_title="お話しアプリ")
 
 st.markdown("""
 <style>
-    /* 🌟 上部のヘッダー（右上のDeployなどのバー）を隠して、画面を広く使う */
+    /* 🌟 上部のヘッダー（Deployなどのバー）を隠す */
     header {
         visibility: hidden !important;
     }
 
-    /* 🌟 1. 頭の上が切れないように、上部の余白を調整 */
+    /* 🌟 頭の上が切れないように上部の余白を調整 */
     .block-container {
         padding-top: 2.5rem !important;
         padding-bottom: 0rem !important;
     }
-    div[data-testid="stVerticalBlock"] > div {
-        padding-top: 0rem !important;
-        padding-bottom: 0rem !important;
+    
+    /* 🌟 画面全体の部品の「隙間」を極限まで詰める */
+    div[data-testid="stVerticalBlock"] {
+        gap: 0rem !important;
+    }
+    div.element-container {
+        margin-bottom: 0px !important;
     }
     
-    /* 🎨 高齢者に優しい背景色（アイボリー）を設定 */
+    /* 🌟 【新規】設定パネル（⚙️音声・設定）の上下の余白を完全に消す */
+    div[data-testid="stExpander"] {
+        margin-top: 0px !important;
+        margin-bottom: 0px !important;
+    }
+    div[data-testid="stExpander"] details {
+        margin-bottom: 0px !important;
+    }
+    
+    /* 🎨 高齢者に優しい背景色を設定 */
     .stApp, .main {
         background-color: #FDF5E6 !important;
     }
@@ -45,12 +58,13 @@ st.markdown("""
         color: white;
         border-radius: 12px;
         margin-top: 0px !important;
+        margin-bottom: 0px !important;
     }
     
-    /* ⌨️ 2. キーボード入力欄周りの余白を削る */
+    /* ⌨️ キーボード入力欄周りの余白を削る */
     .stChatInputContainer {
         padding-bottom: 0px !important;
-        padding-top: 5px !important;
+        padding-top: 0px !important;
         margin-bottom: 0px !important;
     }
     div[data-testid="stChatInput"] {
@@ -58,7 +72,7 @@ st.markdown("""
         margin-bottom: 0px !important;
     }
     
-    /* 🌟 3. Streamlitが強制的に入れる「一番下のスマホ用クッション余白」を完全に潰す */
+    /* 🌟 スマホ用クッション余白を完全に潰す */
     div[data-testid="stBottomBlockContainer"] {
         padding-bottom: 0px !important;
         margin-bottom: 0px !important;

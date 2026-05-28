@@ -16,35 +16,23 @@ st.set_page_config(layout="centered", page_title="お話しアプリ")
 
 st.markdown("""
 <style>
-    /* 🌟 上部のヘッダー（Deployなどのバー）を隠す */
+    /* 🌟 ヘッダーを隠す */
     header {
         visibility: hidden !important;
     }
 
-    /* 🌟 頭の上が切れないように上部の余白を調整 */
+    /* 🌟 画像を上に引き上げる */
     .block-container {
-        padding-top: 2.5rem !important;
-        padding-bottom: 0rem !important;
+        padding-top: 1.5rem !important;
+        padding-bottom: 2rem !important;
     }
     
-    /* 🌟 画面全体の部品の「隙間」を極限まで詰める */
+    /* 🌟 要素間の「隙間」を自然な間隔に */
     div[data-testid="stVerticalBlock"] {
-        gap: 0rem !important;
-    }
-    div.element-container {
-        margin-bottom: 0px !important;
+        gap: 1rem !important;
     }
     
-    /* 🌟 【新規】設定パネル（⚙️音声・設定）の上下の余白を完全に消す */
-    div[data-testid="stExpander"] {
-        margin-top: 0px !important;
-        margin-bottom: 0px !important;
-    }
-    div[data-testid="stExpander"] details {
-        margin-bottom: 0px !important;
-    }
-    
-    /* 🎨 高齢者に優しい背景色を設定 */
+    /* 🎨 高齢者に優しい背景色 */
     .stApp, .main {
         background-color: #FDF5E6 !important;
     }
@@ -52,33 +40,22 @@ st.markdown("""
     /* 🔘 ボタンのサイズ */
     .stButton > button {
         width: 100%;
-        height: 55px;
+        height: 60px;
         font-size: 20px !important;
         background-color: #4CAF50;
         color: white;
         border-radius: 12px;
-        margin-top: 0px !important;
-        margin-bottom: 0px !important;
     }
     
-    /* ⌨️ キーボード入力欄周りの余白を削る */
+    /* ⌨️ 2. キーボード入力欄の「白い部分（内側の余白）」を上下均等に小さくする */
     .stChatInputContainer {
-        padding-bottom: 0px !important;
-        padding-top: 0px !important;
-        margin-bottom: 0px !important;
-    }
-    div[data-testid="stChatInput"] {
-        padding-bottom: 0px !important;
-        margin-bottom: 0px !important;
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
     }
     
-    /* 🌟 スマホ用クッション余白を完全に潰す */
+    /* 🌟 3. キーボード入力欄の「外側（下）」の透明な余白で、画面下からの位置を調整する */
     div[data-testid="stBottomBlockContainer"] {
-        padding-bottom: 0px !important;
-        margin-bottom: 0px !important;
-    }
-    div[data-testid="stBottomBlockContainer"] > div {
-        padding-bottom: 0px !important;
+        padding-bottom: 20px !important; 
     }
     
     /* 一番下のStreamlitロゴの余白を消す */
@@ -196,9 +173,78 @@ else:
         img_closed = "man_close.png"         
         media_talking = "man_close_open.gif"      
 
-    # 🖼️ 上部：キャラクター画像
-    character_placeholder = st.empty()
-    character_placeholder.image(img_closed, width='stretch')
+    # 🖼️ 1. 上部：キャラクター画像と設定ボタンを横に並べる
+    col_img, col_set = st.columns([85, 15]) # 画像85%、ボタン15%の幅で分割
+    
+    with col_img:
+        character_placeholder = st.empty()
+        character_placeholder.image(img_closed, width='stretch')
+        
+    # 🌟 ここから下が「スピード変更時にすぐ反映させる」ための新しい仕組みです
+    speed_options = {
+        "ゆっくり": ("-25%", 1.25), 
+        "ややゆっくり": ("-10%", 1.1), 
+        "標準": ("+0%", 1.0), 
+        "やや早い": ("+10%", 0.9),
+        "早い": ("+25%", 0.75)
+    }
+
+    def on_speed_change():
+        # スライダーから指を離した瞬間に、この処理が割り込んで走ります
+        new_speed = st.session_state.speed_slider
+        st.session_state.current_voice_setting = speed_options[new_speed]
+        v_rate, t_mult = st.session_state.current_voice_setting
+        
+        # ① その場で確認するための「テスト音声」を作る
+        test_audio = generate_voice_bytes("このくらいのスピードでお話ししますね。", v_rate)
+        if test_audio:
+            st.session_state.test_audio_bytes = test_audio
+            
+        # ② 最新のAIのセリフも、新しいスピードで裏側で作り直しておく
+        if len(st.session_state.messages) > 0 and st.session_state.messages[-1]["role"] == "assistant":
+            last_text = st.session_state.messages[-1]["content"]
+            new_audio = generate_voice_bytes(last_text, v_rate)
+            if new_audio:
+                st.session_state.latest_audio = new_audio
+
+    with col_set:
+        # ⚙️ 画像の横に常時表示される設定ボタン
+        with st.popover("⚙️"):
+            st.markdown("**⚙️ 設定**")
+            
+            if "speed_slider" not in st.session_state:
+                st.session_state.speed_slider = "標準"
+            if "current_voice_setting" not in st.session_state:
+                st.session_state.current_voice_setting = speed_options["標準"]
+                
+            # 🌟 on_change を設定して、スライダーを動かした瞬間に処理を走らせる！
+            st.select_slider(
+                "🗣️ スピード", 
+                options=list(speed_options.keys()), 
+                key="speed_slider",
+                on_change=on_speed_change
+            )
+            
+            # 🌟 テスト音声が準備されていれば、ここで自動再生してすぐ消す
+            if st.session_state.get("test_audio_bytes"):
+                st.audio(st.session_state.test_audio_bytes, format="audio/mp3", autoplay=True)
+                st.session_state.test_audio_bytes = None 
+            
+            st.write(" ")
+            # BGMの設定
+            if "bgm_on" not in st.session_state:
+                st.session_state.bgm_on = False
+            st.session_state.bgm_on = st.toggle("🎵 BGM", value=st.session_state.bgm_on)
+                
+            st.write(" ")
+            if st.button("🛑 リセット"):
+                st.session_state.setup_complete = False
+                st.session_state.messages = []
+                st.rerun()
+
+    # 🌟 音楽プレイヤー本体はメニューの「外」に置く
+    if st.session_state.get("bgm_on"):
+        st.audio("bgm.mp3", autoplay=True, loop=True)
 
     # 🎵 音声再生バーとリプレイボタンを配置するための空箱
     voice_player_placeholder = st.empty()
@@ -265,25 +311,6 @@ else:
     
     # ⌨️ キーボード入力
     text_prompt = st.chat_input("キーボードで入力...")
-
-    # ⚙️ 設定パネル
-    st.markdown("---")
-    with st.expander("⚙️ 音声・設定（スタッフ用）", expanded=False):
-        speed_options = {"ゆっくり": ("-25%", 1.25), "少しゆっくり": ("-10%", 1.1), "標準": ("+0%", 1.0), "少し早い": ("+10%", 0.9)}
-        selected_speed = st.select_slider("🗣️ 話すスピード", options=list(speed_options.keys()), value="標準")
-        
-        st.session_state.current_voice_setting = speed_options[selected_speed]
-        
-        st.write(" ")
-        bgm_on = st.toggle("🎵 心休まる音楽を流す", value=False)
-        if bgm_on:
-            st.audio("bgm.mp3", autoplay=True, loop=True)
-            
-        st.write(" ")
-        if st.button("🛑 この会話を終了する（リセット）"):
-            st.session_state.setup_complete = False
-            st.session_state.messages = []
-            st.rerun()
 
     # --------------------------------------------------
     # AIの返答処理
